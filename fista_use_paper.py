@@ -79,15 +79,6 @@ def algo5(theta_init, Y, max_iter=2000, gamma=0.1):
 
 
 # Visualisation des résultats
-def plot_sparsity_results(results, iterations):
-    plt.figure(figsize=(10, 6))
-    for name, sparsities in results.items():
-        plt.plot(iterations, sparsities, label=name)
-    plt.xlabel('Iterations')
-    plt.ylabel('Number of Non-Zero Components')
-    plt.legend()
-    plt.title('Sparsity Comparison Across Algorithms')
-    plt.show()
 
 def plot_sparsity_evolution(results_sparsity, iterations_to_track):
     plt.figure(figsize=(10, 6))
@@ -98,7 +89,7 @@ def plot_sparsity_evolution(results_sparsity, iterations_to_track):
     plt.ylabel("Number of Non-Zero Components")
     plt.title("Sparsity Evolution Across Iterations")
     plt.legend()
-    plt.savefig("sparsity_evolution.png")
+    plt.savefig("sparsity_evolution_{p}.png")
     plt.close()
 
 
@@ -111,8 +102,7 @@ def plot_non_zero_probabilities(non_zero_probabilities):
         ax.set_xlabel("Matrix Indices")
         ax.set_ylabel("Runs")
     plt.tight_layout()
-    plt.savefig("non_zero_probabilities.png")
-    plt.close()
+    plt.savefig("non_zero_probabilities_{p}.png")
 
 # Run the five algorithms and compare their performance
 def run_algorithms(Y, p, max_iter=2000, runs=10):
@@ -147,8 +137,8 @@ if __name__ == "__main__":
     # Paramètres du modèle
     # Dimensions du problème
 
-    N = 25  # Nombre d'observations
-    p = 10  # Dimension du modèle (p x p)
+    N = 5  # Nombre d'observations
+    p = 2  # Dimension du modèle (p x p)
     np.random.seed(42)  # Répétabilité des résultats
     theta_true = np.zeros((p, p))
     upper_indices = np.triu_indices(p, k=1)  # Indices des éléments hors diagonale (supérieurs)
@@ -164,7 +154,7 @@ if __name__ == "__main__":
 
     # Simulations
     results_sparsity, non_zero_probabilities, iterations_to_track = run_algorithms(Y, p, max_iter=2000, runs=10)
-    dill.dump_session('fista_use_paper.db')
+    dill.dump_session('fista_use_paper_{p}.db')
 
     # Plot sparsity evolution
     plot_sparsity_evolution(results_sparsity, iterations_to_track)

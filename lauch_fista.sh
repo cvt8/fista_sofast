@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=fista
-#SBATCH --output=logs/fista.out
+#SBATCH --job-name=fista_100
+#SBATCH --output=logs/fista_100.out
 #SBATCH --error=logs/fista.err
 #SBATCH --partition=gnt,lastgen, newgen
 #SBATCH --array=1-1:1

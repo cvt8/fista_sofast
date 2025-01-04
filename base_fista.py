@@ -1,4 +1,5 @@
 import numpy as np # type: ignore
+import matplotlib.pyplot as plt # type: ignore
 from grad import grad_f, prox_g
 
 # FISTA algorithm using the paper
@@ -42,7 +43,7 @@ def fista_use_paper(A, y, lambda_, max_iter=1000, tol=1e-4):
 
     return x_hat
 
-def p_pg(theta_init, Y, max_iter=2000, gamma=0.1):
+def p_pg(theta_init, Y, N, max_iter=2000, gamma=0.1):
     """
     Implements the P-PG algorithm.
     """
@@ -55,7 +56,7 @@ def p_pg(theta_init, Y, max_iter=2000, gamma=0.1):
     return theta
 
 
-def p_fista(theta_init, Y, max_iter=2000, gamma=0.1):
+def p_fista(theta_init, Y, N, max_iter=2000, gamma=0.1):
     """
     Implements the P-FISTA algorithm.
     """
@@ -80,3 +81,13 @@ def penalty_g(theta, lambda_reg, mu_reg):
     off_diag_part = np.sum(np.abs(theta - np.diag(np.diag(theta))))  # Partie L1 hors diagonale
     res = lambda_reg * off_diag_part + mu_reg * np.sum(diag_part)
     return res
+
+def plot_sparsity_results(results, iterations):
+    plt.figure(figsize=(10, 6))
+    for name, sparsities in results.items():
+        plt.plot(iterations, sparsities, label=name)
+    plt.xlabel('Iterations')
+    plt.ylabel('Number of Non-Zero Components')
+    plt.legend()
+    plt.title('Sparsity Comparison Across Algorithms')
+    plt.show()

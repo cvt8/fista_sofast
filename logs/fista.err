@@ -1,6 +1,1 @@
-/home/cvaillanttenzer/Documents/fista_sofast/fista_use_paper.py:129: RuntimeWarning: overflow encountered in exp
-  prob_accept = np.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))
-/home/cvaillanttenzer/Documents/fista_sofast/fista_use_paper.py:82: RuntimeWarning: overflow encountered in exp
-  log_Z_theta = np.sum(np.log(1 + np.exp(theta @ theta.T)))
-/home/cvaillanttenzer/Documents/fista_sofast/fista_use_paper.py:129: RuntimeWarning: invalid value encountered in scalar subtract
-  prob_accept = np.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))
+slurmstepd: error: *** JOB 3806397 ON node40 CANCELLED AT 2025-01-04T18:21:31 ***
