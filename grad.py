@@ -1,15 +1,6 @@
 import numpy as np #type: ignore
 
 
-def penalty_g(theta):
-    """
-    Calcule la pénalité g(θ) = λ * ||θ_offdiag||_1 + μ * ||diag(θ)||_2^2.
-    """
-    diag_part = np.diag(theta)**2  # Partie quadratique (diagonale)
-    off_diag_part = np.sum(np.abs(theta - np.diag(np.diag(theta))))  # Partie L1 hors diagonale
-    res = lambda_reg * off_diag_part + mu_reg * np.sum(diag_part)
-    return res
-
 # Fonction log-vraisemblance pénalisée f(θ)
 def log_likelihood_penalized(theta, Y):
     """
