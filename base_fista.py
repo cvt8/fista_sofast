@@ -1,4 +1,5 @@
-import numpy as np
+import numpy as np # type: ignore
+from grad import grad_f, prox_g
 
 # FISTA algorithm using the paper
 # "A Fast Iterative Shrinkage-Thresholding Algorithm"
