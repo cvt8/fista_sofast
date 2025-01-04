@@ -72,13 +72,3 @@ def p_fista(theta_init, Y, N, max_iter=2000, gamma=0.1):
         t += 1
     print("p_fista", theta)
     return theta
-
-def plot_sparsity_results(results, iterations):
-    plt.figure(figsize=(10, 6))
-    for name, sparsities in results.items():
-        plt.plot(iterations, sparsities, label=name)
-    plt.xlabel('Iterations')
-    plt.ylabel('Number of Non-Zero Components')
-    plt.legend()
-    plt.title('Sparsity Comparison Across Algorithms')
-    plt.show()

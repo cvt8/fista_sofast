@@ -15,10 +15,17 @@ To generate the video from our code, follow these steps:
 ## Contents
 
 `presentation.pdf`: a beamer presentation of our work
+
 `fisa_use_paper.py`: main code to reproduce the results of our paper
+
 `grad.py`: helper function for sampling (Wolff sampling), gradient and penalty computation
-`base_fista.py`: a bsaic implementation of the fista algorithm and others algorithm (we finally don't use this code)
+
+`visualisation.py`: Graph plotting functions
+
+`base_fista.py`: a basic implementation of the fista algorithm and others algorithm (we finally don't use this code)
+
 `logs`: logs when implementing our code
+
 `lauch_fista.sh`: shell script if you want to run our code n a computation cluster using slurm (to adapt with the cluster parameters)
 
 ## Possible improvements

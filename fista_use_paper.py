@@ -2,6 +2,7 @@ import numpy as np # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 import dill # type: ignore
 from grad import grad_f, prox_g, penalty_g
+from visualisation import plot_sparsity_evolution, plot_non_zero_probabilities
 
 
 def has_converged(prev_value, curr_value, tol=1e-2):
@@ -125,33 +126,6 @@ def algo5(theta_init, Y, max_iter=2000, gamma=0.1):
     return theta
 
 
-
-# Visualisation des résultats
-
-def plot_sparsity_evolution(results_sparsity, iterations_to_track):
-    plt.figure(figsize=(10, 6))
-    for algo, sparsity_values in results_sparsity.items():
-        mean_sparsity = np.mean(sparsity_values, axis=0)
-        plt.plot(iterations_to_track, mean_sparsity, label=algo)
-    plt.xlabel("Iterations")
-    plt.ylabel("Number of Non-Zero Components")
-    plt.title("Sparsity Evolution Across Iterations")
-    plt.legend()
-    plt.savefig("sparsity_evolution_{p}.png")
-    plt.close()
-
-
-def plot_non_zero_probabilities(non_zero_probabilities):
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-    for idx, (algo, probabilities) in enumerate(non_zero_probabilities.items()):
-        ax = axes[idx]
-        ax.imshow(probabilities, cmap="gray", aspect="auto")
-        ax.set_title(f"Non-Zero Probability Heatmap: {algo}")
-        ax.set_xlabel("Matrix Indices")
-        ax.set_ylabel("Runs")
-    plt.tight_layout()
-    plt.savefig("non_zero_probabilities_{p}.png")
-
 # Run the five algorithms and compare their performance
 def run_algorithms(Y, p, max_iter=2000, runs=10):
     iterations_to_track = [50, 500, 1000, 1500, 2000]
@@ -202,7 +176,10 @@ if __name__ == "__main__":
 
     # Simulations
     results_sparsity, non_zero_probabilities, iterations_to_track = run_algorithms(Y, p, max_iter=2000, runs=10)
-    dill.dump_session('fista_use_paper_{p}.db')
+
+    # Sauvegarde des résultats
+    with open(f'fista_use_paper_results_{p}.pkl', 'wb') as f:
+        dill.dump((results_sparsity, non_zero_probabilities, iterations_to_track), f)
 
     # Plot sparsity evolution
     plot_sparsity_evolution(results_sparsity, iterations_to_track)
