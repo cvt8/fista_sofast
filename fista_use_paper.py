@@ -137,8 +137,8 @@ if __name__ == "__main__":
     # Paramètres du modèle
     # Dimensions du problème
 
-    N = 5  # Nombre d'observations
-    p = 2  # Dimension du modèle (p x p)
+    N = 250  # Nombre d'observations
+    p = 100  # Dimension du modèle (p x p)
     np.random.seed(42)  # Répétabilité des résultats
     theta_true = np.zeros((p, p))
     upper_indices = np.triu_indices(p, k=1)  # Indices des éléments hors diagonale (supérieurs)
