@@ -73,15 +73,6 @@ def p_fista(theta_init, Y, N, max_iter=2000, gamma=0.1):
     print("p_fista", theta)
     return theta
 
-def penalty_g(theta, lambda_reg, mu_reg):
-    """
-    Calcule la pénalité g(θ) = λ * ||θ_offdiag||_1 + μ * ||diag(θ)||_2^2.
-    """
-    diag_part = np.diag(theta)**2  # Partie quadratique (diagonale)
-    off_diag_part = np.sum(np.abs(theta - np.diag(np.diag(theta))))  # Partie L1 hors diagonale
-    res = lambda_reg * off_diag_part + mu_reg * np.sum(diag_part)
-    return res
-
 def plot_sparsity_results(results, iterations):
     plt.figure(figsize=(10, 6))
     for name, sparsities in results.items():

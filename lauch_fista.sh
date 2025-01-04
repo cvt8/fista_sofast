@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=fista_100
-#SBATCH --output=logs/fista_100.out
-#SBATCH --error=logs/fista.err
+#SBATCH --job-name=fista2
+#SBATCH --output=logs/fista2.out
+#SBATCH --error=logs/fista2.err
 #SBATCH --partition=gnt,lastgen, newgen
 #SBATCH --array=1-1:1
 #SBATCH --share

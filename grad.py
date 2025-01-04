@@ -1,5 +1,14 @@
 import numpy as np #type: ignore
 
+def penalty_g(theta, lambda_reg, mu_reg):
+    """
+    Calcule la pénalité g(θ) = λ * ||θ_offdiag||_1 + μ * ||diag(θ)||_2^2.
+    """
+    diag_part = np.diag(theta)**2  # Partie quadratique (diagonale)
+    off_diag_part = np.sum(np.abs(theta - np.diag(np.diag(theta))))  # Partie L1 hors diagonale
+    res = lambda_reg * off_diag_part + mu_reg * np.sum(diag_part)
+    return res
+
 
 # Fonction log-vraisemblance pénalisée f(θ)
 def log_likelihood_penalized(theta, Y):
@@ -15,6 +24,22 @@ def log_likelihood_penalized(theta, Y):
     # Calcul de -f(θ)
     f_theta = -log_Z_theta + np.sum(theta @ Y_mean.T) + np.sum(interaction * theta)
     return f_theta
+
+def wolff_sampler(theta, Y, num_samples=100):
+    """
+    Wolff sampling algorithm for generating samples from a Boltzmann distribution.
+    """
+    samples = np.zeros((num_samples, theta.shape[0], theta.shape[1]))
+    for i in range(num_samples):
+        for j in range(theta.shape[0]):
+            for k in range(j + 1, theta.shape[1]):
+                theta_new = np.copy(theta)
+                theta_new[j, k] = 1 - theta[j, k]  # Flip element
+                prob_accept = np.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))
+                if np.random.rand() < prob_accept:
+                    theta[j, k] = theta_new[j, k]
+        samples[i] = theta
+    return samples
 
 
 def prox_g(theta, gamma, lambda_reg, mu_reg):
@@ -34,22 +59,6 @@ def prox_g(theta, gamma, lambda_reg, mu_reg):
     # Reconstruct matrix
     prox_theta = prox_off_diag + np.diag(prox_diag)
     return prox_theta
-
-def wolff_sampler(theta, Y, num_samples=100):
-    """
-    Wolff sampling algorithm for generating samples from a Boltzmann distribution.
-    """
-    samples = np.zeros((num_samples, theta.shape[0], theta.shape[1]))
-    for i in range(num_samples):
-        for j in range(theta.shape[0]):
-            for k in range(j + 1, theta.shape[1]):
-                theta_new = np.copy(theta)
-                theta_new[j, k] = 1 - theta[j, k]  # Flip element
-                prob_accept = np.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))
-                if np.random.rand() < prob_accept:
-                    theta[j, k] = theta_new[j, k]
-        samples[i] = theta
-    return samples
 
 def grad_f(theta, Y, num_samples):
     """

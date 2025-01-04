@@ -1,18 +1,34 @@
 import numpy as np # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 import dill # type: ignore
-from grad import grad_f, prox_g
+from grad import grad_f, prox_g, penalty_g
+
+
+def has_converged(prev_value, curr_value, tol=1e-2):
+    """
+    Check if the algorithm has converged based on the change in objective values.
+    """
+    return np.abs(curr_value - prev_value) < tol
 
 
 #The papers algorithms
 # Algo1: P-PG
 def algo1(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
+    prev_objective = float("inf")
     for k in range(max_iter):
         num_samples = int(np.sqrt(k + 1))
-        grad = grad_f(theta, Y, num_samples)
+        grad = grad_f(theta, Y, num_samples) 
         theta -= gamma * grad
         theta = prox_g(theta, gamma, lambda_reg, mu_reg)
+
+        # Monitor convergence
+        curr_objective = penalty_g(theta, lambda_reg, mu_reg) + np.sum(grad)
+        if has_converged(prev_objective, curr_objective):
+            print(f"Converged at iteration {k}")
+            break
+        prev_objective = curr_objective
+
     return theta
 
 
@@ -21,14 +37,22 @@ def algo2(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
     theta_old = np.copy(theta_init)
     t = 1
+    prev_objective = float("inf")
     for k in range(max_iter):
         y = theta + (t - 1) / (t + 1) * (theta - theta_old)
-        num_samples = (k + 1) ** 3
+        num_samples = min((k + 1) ** 3, 10000) # limit the number of samples
         grad = grad_f(y, Y, num_samples)
         theta_new = prox_g(y - gamma * grad, gamma, lambda_reg, mu_reg)
         theta_old = np.copy(theta)
         theta = np.copy(theta_new)
         t += 1
+
+        # Monitor convergence
+        curr_objective = penalty_g(theta, lambda_reg, mu_reg) + np.sum(grad)
+        if has_converged(prev_objective, curr_objective):
+            print(f"Converged at iteration {k}")
+            break
+        prev_objective = curr_objective
     return theta
 
 
@@ -37,14 +61,22 @@ def algo3(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
     theta_old = np.copy(theta_init)
     t = 1
+    prev_objective = float("inf")
     for k in range(max_iter):
         y = theta + (t - 1) / (t + 1) * (theta - theta_old)
-        num_samples = (k + 1) ** 3
+        num_samples = min((k + 1) ** 3, 10000) # limit the number of samples
         grad = grad_f(y, Y, num_samples)
         theta_new = prox_g(y - gamma * grad, gamma, lambda_reg, mu_reg)
         theta_old = np.copy(theta)
         theta = np.copy(theta_new)
-        t += 0.5  # Simulates O(sqrt(n)) growth
+        t = np.sqrt(k+1)
+
+        # Monitor convergence
+        curr_objective = penalty_g(theta, lambda_reg, mu_reg) + np.sum(grad)
+        if has_converged(prev_objective, curr_objective):
+            print(f"Converged at iteration {k}")
+            break
+        prev_objective = curr_objective
     return theta
 
 
@@ -53,14 +85,22 @@ def algo4(theta_init, Y, max_iter=2000, gamma=0.1, epsilon=0.1):
     theta = theta_init
     theta_old = np.copy(theta_init)
     t = 1
+    prev_objective = float("inf")
     for k in range(max_iter):
         y = theta + (t - 1) / (t + 1) * (theta - theta_old)
-        num_samples = (k + 1) ** 3
+        num_samples = min((k + 1) ** 3, 10000) # limit the number of samples
         grad = grad_f(y, Y, num_samples)
         theta_new = prox_g(y - gamma * grad, gamma, lambda_reg, mu_reg)
         theta_old = np.copy(theta)
         theta = np.copy(theta_new)
-        t += epsilon
+        t = np.power(k+1, epsilon)
+
+        # Monitor convergence
+        curr_objective = penalty_g(theta, lambda_reg, mu_reg) + np.sum(grad)
+        if has_converged(prev_objective, curr_objective):
+            print(f"Converged at iteration {k}")
+            break
+        prev_objective = curr_objective
     return theta
 
 
@@ -68,12 +108,20 @@ def algo4(theta_init, Y, max_iter=2000, gamma=0.1, epsilon=0.1):
 def algo5(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
     grad_accumulated = np.zeros_like(theta)
+    prev_objective = float("inf")
     for k in range(max_iter):
-        num_samples = 1  # Single sample at each iteration
+        num_samples = 10  # A few samples at each iteration
         grad = grad_f(theta, Y, num_samples)
         grad_accumulated = (1 - 1 / (k + 1)) * grad_accumulated + (1 / (k + 1)) * grad
         theta -= gamma * grad_accumulated
         theta = prox_g(theta, gamma, lambda_reg, mu_reg)
+
+        # Monitor convergence
+        curr_objective = penalty_g(theta, lambda_reg, mu_reg) + np.sum(grad)
+        if has_converged(prev_objective, curr_objective):
+            print(f"Converged at iteration {k}")
+            break
+        prev_objective = curr_objective
     return theta
 
 
