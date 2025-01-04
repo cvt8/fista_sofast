@@ -17,7 +17,7 @@ source ~/.bashrc
 
 module load anaconda
 
-conda activate
+conda activate fista
 
 cd /home/cvaillanttenzer/Documents/fista_sofast
 
