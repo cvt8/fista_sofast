@@ -1,0 +1,4 @@
+/home/cvaillanttenzer/Documents/fista_sofast/grad.py:22: RuntimeWarning: overflow encountered in exp
+  log_Z_theta = np.sum(np.log(1 + np.exp(theta @ theta.T)))
+/home/cvaillanttenzer/Documents/fista_sofast/grad.py:38: RuntimeWarning: invalid value encountered in scalar subtract
+  prob_accept = np.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))

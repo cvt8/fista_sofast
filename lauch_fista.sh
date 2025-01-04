@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=fista2
-#SBATCH --output=logs/fista2.out
-#SBATCH --error=logs/fista2.err
-#SBATCH --partition=gnt,lastgen, newgen
+#SBATCH --job-name=fista100
+#SBATCH --output=logs/fista100.out
+#SBATCH --error=logs/fista100.err
+#SBATCH --partition=lastgen,newgen,gnt
 #SBATCH --array=1-1:1
 #SBATCH --share
 #SBATCH --mem-per-cpu=5000
