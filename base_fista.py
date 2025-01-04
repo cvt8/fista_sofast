@@ -40,3 +40,33 @@ def fista_use_paper(A, y, lambda_, max_iter=1000, tol=1e-4):
             break
 
     return x_hat
+
+def p_pg(theta_init, Y, max_iter=2000, gamma=0.1):
+    """
+    Implements the P-PG algorithm.
+    """
+    theta = theta_init
+    for k in range(max_iter):
+        grad = grad_f(theta, Y, num_samples=N)  # Adjust samples
+        theta -= gamma * grad
+        theta = prox_g(theta, gamma)
+    print("p_pg", theta)
+    return theta
+
+
+def p_fista(theta_init, Y, max_iter=2000, gamma=0.1):
+    """
+    Implements the P-FISTA algorithm.
+    """
+    theta = theta_init
+    theta_old = np.copy(theta_init)
+    t = 1
+    for k in range(max_iter):
+        y = theta + (t - 1) / (t + 1) * (theta - theta_old)
+        grad = grad_f(y, Y, num_samples=N)
+        theta_new = prox_g(y - gamma * grad, gamma)
+        theta_old = np.copy(theta)
+        theta = np.copy(theta_new)
+        t += 1
+    print("p_fista", theta)
+    return theta

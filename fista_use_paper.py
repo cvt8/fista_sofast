@@ -26,7 +26,6 @@ def log_likelihood_penalized(theta, Y):
 
     # Calcul de -f(θ)
     f_theta = -log_Z_theta + np.sum(theta @ Y_mean.T) + np.sum(interaction * theta)
-    print("log_likelihood", f_theta)
     return f_theta
 
 
@@ -66,52 +65,94 @@ def wolff_sampler(theta, num_samples=100):
     print("wolff_sampler", samples)
     return samples
 
-def grad_f(theta, Y, num_samples=100):
+def grad_f(theta, Y, num_samples):
     """
-    Approximates the gradient of f(θ) using Monte Carlo sampling.
+    Approximates the gradient of f(θ) using Wolff sampling.
     """
-    # Use Wolff sampling or another appropriate MCMC method
+    # Use Wolff sampling to generate samples
     samples = wolff_sampler(theta, num_samples)
-    
-    # Compute Monte Carlo sums for expectations
-    Y_mean = np.mean(Y, axis=0)
-    interaction = np.mean(np.einsum('ij,ik->ijk', Y, Y), axis=0)
-    grad_theta = interaction - theta @ Y_mean  # Adjust gradient as needed
-    print("grad_f", grad_theta)
-    return grad_theta
+    grad = np.zeros_like(theta)
+    for sample in samples:
+        grad += sample - Y
+    grad /= num_samples
+    return grad
 
 
-
-def p_pg(theta_init, Y, max_iter=2000, gamma=0.1):
-    """
-    Implements the P-PG algorithm.
-    """
+#The papers algorithm
+# Algo1: P-PG
+def algo1(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
     for k in range(max_iter):
-        grad = grad_f(theta, Y, num_samples=int(np.sqrt(k + 1)))  # Adjust samples
+        num_samples = int(np.sqrt(k + 1))
+        grad = grad_f(theta, Y, num_samples)
         theta -= gamma * grad
         theta = prox_g(theta, gamma)
-    print("p_pg", theta)
     return theta
 
-def p_fista(theta_init, Y, max_iter=2000, gamma=0.1):
-    """
-    Implements the P-FISTA algorithm.
-    """
+
+# Algo2: P-FISTA (t_n = O(n))
+def algo2(theta_init, Y, max_iter=2000, gamma=0.1):
     theta = theta_init
     theta_old = np.copy(theta_init)
     t = 1
     for k in range(max_iter):
         y = theta + (t - 1) / (t + 1) * (theta - theta_old)
-        grad = grad_f(y, Y, num_samples=k**3)  # Larger Monte Carlo samples
+        num_samples = (k + 1) ** 3
+        grad = grad_f(y, Y, num_samples)
         theta_new = prox_g(y - gamma * grad, gamma)
         theta_old = np.copy(theta)
         theta = np.copy(theta_new)
         t += 1
-    print("p_fista", theta)
     return theta
 
-# Visualize sparsity
+
+# Algo3: P-FISTA (t_n = O(sqrt(n)))
+def algo3(theta_init, Y, max_iter=2000, gamma=0.1):
+    theta = theta_init
+    theta_old = np.copy(theta_init)
+    t = 1
+    for k in range(max_iter):
+        y = theta + (t - 1) / (t + 1) * (theta - theta_old)
+        num_samples = (k + 1) ** 3
+        grad = grad_f(y, Y, num_samples)
+        theta_new = prox_g(y - gamma * grad, gamma)
+        theta_old = np.copy(theta)
+        theta = np.copy(theta_new)
+        t += 0.5  # Simulates O(sqrt(n)) growth
+    return theta
+
+
+# Algo4: P-FISTA (t_n = O(n^epsilon))
+def algo4(theta_init, Y, max_iter=2000, gamma=0.1, epsilon=0.1):
+    theta = theta_init
+    theta_old = np.copy(theta_init)
+    t = 1
+    for k in range(max_iter):
+        y = theta + (t - 1) / (t + 1) * (theta - theta_old)
+        num_samples = (k + 1) ** 3
+        grad = grad_f(y, Y, num_samples)
+        theta_new = prox_g(y - gamma * grad, gamma)
+        theta_old = np.copy(theta)
+        theta = np.copy(theta_new)
+        t += epsilon
+    return theta
+
+
+# Algo5: P-PG with Accumulated Gradient
+def algo5(theta_init, Y, max_iter=2000, gamma=0.1):
+    theta = theta_init
+    grad_accumulated = np.zeros_like(theta)
+    for k in range(max_iter):
+        num_samples = 1  # Single sample at each iteration
+        grad = grad_f(theta, Y, num_samples)
+        grad_accumulated = (1 - 1 / (k + 1)) * grad_accumulated + (1 / (k + 1)) * grad
+        theta -= gamma * grad_accumulated
+        theta = prox_g(theta, gamma)
+    return theta
+
+
+
+# Visualisation des résultats
 def plot_sparsity_results(results, iterations):
     plt.figure(figsize=(10, 6))
     for name, sparsities in results.items():
@@ -121,38 +162,6 @@ def plot_sparsity_results(results, iterations):
     plt.legend()
     plt.title('Sparsity Comparison Across Algorithms')
     plt.show()
-
-# Run multiple algorithms and compare their performance
-def run_algorithms():
-    max_iter = 2000
-    runs = 100  # Number of independent runs for probabilistic results
-    iterations_to_track = [50, 500, 1000, 1500, 2000]
-
-    results_sparsity = {'P-PG': [], 'P-FISTA': []}
-    non_zero_probabilities = {'P-PG': [], 'P-FISTA': []}
-
-    for _ in range(runs):
-        print(f"Run: {_ + 1}")
-        # Initialize theta
-        theta_init = np.random.normal(0, 1, size=(p, p))
-        
-        # Run P-PG
-        theta_p_pg = p_pg(np.copy(theta_init), Y, max_iter=max_iter)
-        sparsity_p_pg = [np.count_nonzero(theta_p_pg[:i]) for i in iterations_to_track]
-        results_sparsity['P-PG'].append(sparsity_p_pg)
-        non_zero_probabilities['P-PG'].append(theta_p_pg != 0)
-        
-        # Run P-FISTA
-        theta_p_fista = p_fista(np.copy(theta_init), Y, max_iter=max_iter)
-        sparsity_p_fista = [np.count_nonzero(theta_p_fista[:i]) for i in iterations_to_track]
-        results_sparsity['P-FISTA'].append(sparsity_p_fista)
-        non_zero_probabilities['P-FISTA'].append(theta_p_fista != 0)
-
-    # Aggregate non-zero probabilities
-    for key in non_zero_probabilities:
-        non_zero_probabilities[key] = np.mean(non_zero_probabilities[key], axis=0)
-
-    return results_sparsity, non_zero_probabilities, iterations_to_track
 
 def plot_sparsity_evolution(results_sparsity, iterations_to_track):
     plt.figure(figsize=(10, 6))
@@ -166,6 +175,7 @@ def plot_sparsity_evolution(results_sparsity, iterations_to_track):
     plt.savefig("sparsity_evolution.png")
     plt.close()
 
+
 def plot_non_zero_probabilities(non_zero_probabilities):
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     for idx, (algo, probabilities) in enumerate(non_zero_probabilities.items()):
@@ -177,6 +187,35 @@ def plot_non_zero_probabilities(non_zero_probabilities):
     plt.tight_layout()
     plt.savefig("non_zero_probabilities.png")
     plt.close()
+
+# Run the five algorithms and compare their performance
+def run_algorithms():
+    max_iter = 2000
+    runs = 10
+    iterations_to_track = [50, 500, 1000, 1500, 2000]
+
+    results_sparsity = {'Algo1': [], 'Algo2': [], 'Algo3': [], 'Algo4': [], 'Algo5': []}
+    non_zero_probabilities = {'Algo1': [], 'Algo2': [], 'Algo3': [], 'Algo4': [], 'Algo5': []}
+
+    for _ in range(runs):
+        theta_init = np.random.normal(0, 1, size=(p, p))
+
+        # Run each algorithm
+        for algo_name, algo_func in zip(
+            ['Algo1', 'Algo2', 'Algo3', 'Algo4', 'Algo5'],
+            [algo1, algo2, algo3, algo4, algo5]
+        ):
+            theta = algo_func(np.copy(theta_init), Y, max_iter=max_iter)
+            sparsity = [np.count_nonzero(theta) for _ in iterations_to_track]
+            results_sparsity[algo_name].append(sparsity)
+            non_zero_probabilities[algo_name].append(theta != 0)
+
+    # Aggregate non-zero probabilities
+    for key in non_zero_probabilities:
+        non_zero_probabilities[key] = np.mean(non_zero_probabilities[key], axis=0)
+
+    return results_sparsity, non_zero_probabilities, iterations_to_track
+
 
 if __name__ == "__main__":
     # Paramètres du modèle
@@ -197,15 +236,7 @@ if __name__ == "__main__":
     lambda_reg = 0.5 * np.sqrt(np.log(p) / N)  # Paramètre de régularisation L1
     mu_reg = 0.5  # Paramètre de régularisation L2
 
-
-    # Test du proximal operator
-    gamma_test = 0.1  # Valeur de test pour le pas
-    theta_test = np.copy(theta_true)  # Exemple d'initialisation
-    theta_prox = prox_g(theta_test, gamma_test)
-    print(np.linalg.norm(theta_prox - theta_test, ord=2))  # Vérification de la proximité
-
-
-    # Run simulations and collect results
+    # Simulations
     results_sparsity, non_zero_probabilities, iterations_to_track = run_algorithms()
     dill.dump_session('fista_use_paper.db')
 
