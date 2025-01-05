@@ -30,7 +30,8 @@ def log_likelihood_penalized(theta, Y):
     f_theta = -log_Z_theta + jnp.sum(theta @ Y_mean.T) + jnp.sum(interaction * theta)
     return f_theta
 
-def wolff_sampler(theta, Y, num_samples):
+@jit
+def wolff_sampler(theta, Y, num_samples, seed=0):
     """
     Vectorized Wolff sampling using JAX lax.scan.
     """
@@ -49,7 +50,7 @@ def wolff_sampler(theta, Y, num_samples):
         theta = jnp.where(jax.random.uniform(subkey_accept) < prob_accept, theta_new, theta)
         return (theta, key), theta
 
-    key = jax.random.PRNGKey(0)
+    key = jax.random.PRNGKey(seed)
     carry = (theta, key)
     _, samples = jax.lax.scan(single_sample, carry, jnp.arange(num_samples))
     return samples
@@ -78,8 +79,9 @@ def grad_f(theta, Y, num_samples):
     """
     Approximates the gradient of f(θ) using Wolff sampling.
     """
-    wolff_sampler_jit = jit(wolff_sampler, static_argnums=(2,))
-    samples = wolff_sampler_jit(theta, Y, num_samples)
+    #wolff_sampler_jit = jit(wolff_sampler, static_argnums=(2,))
+    #samples = wolff_sampler_jit(theta, Y, num_samples)
+    samples = wolff_sampler(theta, Y, num_samples)
     mean_Y = jnp.mean(Y, axis=0)
     grad = jnp.mean(samples, axis=0) - mean_Y
     return grad
