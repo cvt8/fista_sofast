@@ -3,9 +3,8 @@ import jax.numpy as jnp
 from jax import jit
 import concurrent.futures
 import dill
-import matplotlib.pyplot as plt
 import numpy as np
-from grad import grad_f, prox_g, penalty_g
+from grad_jax import grad_f, prox_g, penalty_g
 from visualisation import plot_sparsity_evolution, plot_non_zero_probabilities
 
 @jit
