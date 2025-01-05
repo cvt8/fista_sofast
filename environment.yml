@@ -8,3 +8,5 @@ dependencies:
   - matplotlib
   - dill
   - pip
+  - pip:
+    - jax
