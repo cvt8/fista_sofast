@@ -1,0 +1,2 @@
+/home/cvaillanttenzer/Documents/fista_sofast/grad.py:22: RuntimeWarning: overflow encountered in exp
+  log_Z_theta = np.sum(np.log(1 + np.exp(theta @ theta.T)))
