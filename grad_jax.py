@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 from jax import jit
 import numpy as np
+import concurrent.futures
 
 @jit
 def penalty_g(theta, lambda_reg, mu_reg):
@@ -30,29 +31,29 @@ def log_likelihood_penalized(theta, Y):
     f_theta = -log_Z_theta + jnp.sum(theta @ Y_mean.T) + jnp.sum(interaction * theta)
     return f_theta
 
-@jit
-def wolff_sampler(theta, Y, num_samples, seed=0):
+def wolff_sampler(theta, Y, num_samples=100):
     """
-    Vectorized Wolff sampling using JAX lax.scan.
+    Wolff sampling algorithm for generating samples from a Boltzmann distribution.
     """
-    def single_sample(carry, _):
-        """
-        Perform a single sample step in the Wolff sampling process.
-        """
-        theta, key = carry
-        key, subkey = jax.random.split(key)
-        flip_mask = jax.random.uniform(subkey, theta.shape) < 0.5
-        theta_new = theta.at[flip_mask].set(1 - theta[flip_mask])
-        prob_accept = jnp.exp(
-            log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y)
-        )
-        key, subkey_accept = jax.random.split(key)
-        theta = jnp.where(jax.random.uniform(subkey_accept) < prob_accept, theta_new, theta)
-        return (theta, key), theta
+    def single_sample(theta):
+        for j in range(theta.shape[0]):
+            for k in range(j + 1, theta.shape[1]):
+                theta_new = jnp.copy(theta)
+                theta_new = theta_new.at[j, k].set(1 - theta[j, k])  # Flip element
+                prob_accept = jnp.exp(log_likelihood_penalized(theta_new, Y) - log_likelihood_penalized(theta, Y))
+                if np.random.rand() < prob_accept:
+                    theta = theta.at[j, k].set(theta_new[j, k])
+        return theta
 
-    key = jax.random.PRNGKey(seed)
-    carry = (theta, key)
-    _, samples = jax.lax.scan(single_sample, carry, jnp.arange(num_samples))
+
+    def single_sample_wrapper(theta):
+        return single_sample(theta)
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(single_sample_wrapper, theta) for _ in range(num_samples)]
+        results = [f.result() for f in concurrent.futures.as_completed(futures)]
+
+    samples = jnp.stack(results)
     return samples
 
 @jit
@@ -79,8 +80,7 @@ def grad_f(theta, Y, num_samples):
     """
     Approximates the gradient of f(θ) using Wolff sampling.
     """
-    #wolff_sampler_jit = jit(wolff_sampler, static_argnums=(2,))
-    #samples = wolff_sampler_jit(theta, Y, num_samples)
+
     samples = wolff_sampler(theta, Y, num_samples)
     mean_Y = jnp.mean(Y, axis=0)
     grad = jnp.mean(samples, axis=0) - mean_Y

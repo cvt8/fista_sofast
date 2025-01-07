@@ -178,7 +178,7 @@ if __name__ == "__main__":
     results_sparsity, non_zero_probabilities, iterations_to_track = run_algorithms(Y, p, max_iter=2000, runs=10)
 
     # Sauvegarde des résultats
-    with open(f'fista_use_paper_results_{p}.pkl', 'wb') as f:
+    with open(f'results_data/fista_use_paper_results_{p}.pkl', 'wb') as f:
         dill.dump((results_sparsity, non_zero_probabilities, iterations_to_track), f)
 
     # Plot sparsity evolution

@@ -2,7 +2,7 @@
 #SBATCH --job-name=fista100
 #SBATCH --output=logs/fista100.out
 #SBATCH --error=logs/fista100.err
-#SBATCH --partition=lastgen,newgen,gnt
+#SBATCH --partition=lastgen,newgen
 #SBATCH --array=1-1:1
 #SBATCH --share
 #SBATCH --mem-per-cpu=5000
@@ -19,10 +19,9 @@ module load anaconda
 
 conda activate fista
 
-cd /home/cvaillanttenzer/Documents/fista_sofast
+#cd /home/cvaillanttenzer/Documents/fista_sofast #Remove this line if you are not using the fista_sofast repository 
+#or replace with the relevant path.
 
 python fista_use_paper.py
 
 conda deactivate
-
-#fastgen
